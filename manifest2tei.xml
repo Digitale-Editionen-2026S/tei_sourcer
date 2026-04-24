@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:mets="http://www.loc.gov/METS/"
+                xmlns:mods="http://www.loc.gov/mods/v3"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xmlns:tei="http://www.tei-c.org/ns/1.0"
+                exclude-result-prefixes="#all"
+                version="2.0">
+
+  <xsl:output method="xml" indent="yes" encoding="UTF-8"/>
+
+  <xsl:template match="/">
+    <xsl:variable name="modsRoot" select="(//mods:mods)[1]"/>
+    <xsl:variable name="metsRoot" select="(//mets:mets)[1]"/>
+    <xsl:variable name="title" select="normalize-space((//mods:titleInfo/mods:title | //mets:metsHdr/@ID | /mets:mets/@OBJID)[1])"/>
+    <xsl:variable name="safeTitle" select="if ($title != '') then $title else 'Untitled METS Record'"/>
+
+    <xsl:processing-instruction name="xml-model">href="https://www.tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"</xsl:processing-instruction>
+
+    <tei:TEI>
+      <tei:teiHeader>
+        <tei:fileDesc>
+          <tei:titleStmt>
+            <tei:title><xsl:value-of select="$safeTitle"/></tei:title>
+          </tei:titleStmt>
+          <tei:publicationStmt>
+            <tei:p>Derived from METS record.</tei:p>
+          </tei:publicationStmt>
+          <tei:sourceDesc>
+            <tei:bibl>
+              <tei:title><xsl:value-of select="$safeTitle"/></tei:title>
+              <xsl:if test="$metsRoot/@OBJID">
+                <tei:idno type="objid"><xsl:value-of select="$metsRoot/@OBJID"/></tei:idno>
+              </xsl:if>
+              <xsl:for-each select="//mods:identifier[normalize-space(.) != '']">
+                <tei:idno>
+                  <xsl:if test="@type">
+                    <xsl:attribute name="type" select="@type"/>
+                  </xsl:if>
+                  <xsl:value-of select="normalize-space(.)"/>
+                </tei:idno>
+              </xsl:for-each>
+              <xsl:for-each select="$modsRoot/mods:originInfo/mods:dateCreated[normalize-space(.) != '']">
+                <tei:date>
+                  <xsl:if test="@encoding = 'w3cdtf'">
+                    <xsl:attribute name="when" select="normalize-space(.)"/>
+                  </xsl:if>
+                  <xsl:if test="@point">
+                    <xsl:attribute name="subtype" select="@point"/>
+                  </xsl:if>
+                  <xsl:value-of select="normalize-space(.)"/>
+                </tei:date>
+              </xsl:for-each>
+              <xsl:for-each select="$modsRoot/mods:originInfo/mods:place/mods:placeTerm[normalize-space(.) != '']">
+                <tei:pubPlace><xsl:value-of select="normalize-space(.)"/></tei:pubPlace>
+              </xsl:for-each>
+              <xsl:for-each select="$modsRoot/mods:originInfo/mods:issuance[normalize-space(.) != '']">
+                <tei:note type="issuance"><xsl:value-of select="normalize-space(.)"/></tei:note>
+              </xsl:for-each>
+              <xsl:for-each select="$modsRoot/mods:physicalDescription/mods:extent[normalize-space(.) != '']">
+                <tei:extent><xsl:value-of select="normalize-space(.)"/></tei:extent>
+              </xsl:for-each>
+            </tei:bibl>
+          </tei:sourceDesc>
+        </tei:fileDesc>
+      </tei:teiHeader>
+
+      <tei:facsimile>
+        <xsl:for-each select="$metsRoot/mets:structMap[@TYPE='PHYSICAL']//mets:div[@TYPE='page']">
+          <xsl:variable name="defaultFileId" select="(mets:fptr[starts-with(@FILEID, 'IMG_DEFAULT_')][1]/@FILEID, mets:fptr[1]/@FILEID)[1]"/>
+          <xsl:variable name="defaultFile" select="$metsRoot/mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file[@ID = $defaultFileId][1]"/>
+          <xsl:variable name="imgUrl" select="string($defaultFile/mets:FLocat/@xlink:href)"/>
+          <xsl:variable name="surfId" select="concat('surf-', $defaultFileId)"/>
+
+          <xsl:if test="$imgUrl != ''">
+            <tei:surface xml:id="{$surfId}">
+              <tei:desc>
+                <xsl:value-of select="if (@LABEL) then @LABEL else concat('Page ', position())"/>
+              </tei:desc>
+              <tei:graphic url="{$imgUrl}"/>
+            </tei:surface>
+          </xsl:if>
+        </xsl:for-each>
+      </tei:facsimile>
+
+      <tei:text>
+        <tei:body>
+          <xsl:for-each select="$metsRoot/mets:structMap[@TYPE='PHYSICAL']//mets:div[@TYPE='page']">
+            <xsl:variable name="defaultFileId" select="(mets:fptr[starts-with(@FILEID, 'IMG_DEFAULT_')][1]/@FILEID, mets:fptr[1]/@FILEID)[1]"/>
+            <xsl:variable name="defaultFile" select="$metsRoot/mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file[@ID = $defaultFileId][1]"/>
+            <xsl:variable name="imgUrl" select="string($defaultFile/mets:FLocat/@xlink:href)"/>
+            <xsl:variable name="surfId" select="concat('surf-', $defaultFileId)"/>
+
+            <xsl:if test="$imgUrl != ''">
+              <tei:pb facs="#{ $surfId }" n="{if (@ORDER) then @ORDER else position()}"/>
+            </xsl:if>
+          </xsl:for-each>
+        </tei:body>
+      </tei:text>
+    </tei:TEI>
+  </xsl:template>
+</xsl:stylesheet>

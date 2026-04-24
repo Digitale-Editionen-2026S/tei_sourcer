@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="iiif-to-tei" default="all">
+    <property name="python.cmd" value="python3"/>
+    <property name="list.file" value="manifests.txt"/>
+    <property name="mets.dir" value="manifests"/>
+    <property name="tei.dir" value="tei"/>
+    <property name="stylesheet" value="manifest2tei.xml"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="saxon.version" value="10.9"/>
+    <property name="saxon.jar" value="${lib.dir}/Saxon-HE-${saxon.version}.jar"/>
+    <property name="saxon.url" value="https://repo1.maven.org/maven2/net/sf/saxon/Saxon-HE/${saxon.version}/Saxon-HE-${saxon.version}.jar"/>
+
+    <target name="init">
+        <mkdir dir="${lib.dir}"/>
+        <mkdir dir="${mets.dir}"/>
+        <mkdir dir="${tei.dir}"/>
+    </target>
+
+    <target name="check-saxon" depends="init">
+        <available file="${saxon.jar}" property="saxon.present"/>
+    </target>
+
+    <target name="download-saxon" depends="check-saxon" unless="saxon.present" description="Download Saxon HE JAR">
+        <echo message="Downloading Saxon HE from ${saxon.url}"/>
+        <get src="${saxon.url}" dest="${saxon.jar}" usetimestamp="true"/>
+    </target>
+
+    <target name="download_mets" depends="init" description="Download METS XML files from URL list">
+        <exec executable="${python.cmd}" failonerror="true">
+            <arg value="download_manifests.py"/>
+            <arg value="${list.file}"/>
+            <arg value="${mets.dir}"/>
+        </exec>
+    </target>
+
+    <target name="transform" depends="download-saxon" description="Transform METS XML to TEI with Saxon XSLT">
+        <mkdir dir="${tei.dir}"/>
+        <xslt style="${stylesheet}" basedir="${mets.dir}" destdir="${tei.dir}" includes="*.xml" extension=".tei.xml">
+            <factory name="net.sf.saxon.TransformerFactoryImpl"/>
+            <classpath location="${saxon.jar}"/>
+        </xslt>
+    </target>
+
+    <target name="all" depends="download_mets,transform"/>
+</project>

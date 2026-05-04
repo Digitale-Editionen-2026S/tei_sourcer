@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="iiif-to-tei" default="all">
     <property name="python.cmd" value="python3"/>
-    <property name="list.file" value="manifests.txt"/>
-    <property name="mets.dir" value="manifests"/>
+    <property name="list.file" value="mets.txt"/>
+    <property name="mets.dir" value="mets"/>
     <property name="tei.dir" value="tei"/>
-    <property name="stylesheet" value="manifest2tei.xml"/>
+    <property name="stylesheet" value="mets2tei.xml"/>
     <property name="lib.dir" value="lib"/>
     <property name="saxon.version" value="10.9"/>
     <property name="saxon.jar" value="${lib.dir}/Saxon-HE-${saxon.version}.jar"/>
@@ -27,7 +27,7 @@
 
     <target name="download_mets" depends="init" description="Download METS XML files from URL list">
         <exec executable="${python.cmd}" failonerror="true">
-            <arg value="download_manifests.py"/>
+            <arg value="download_mets.py"/>
             <arg value="${list.file}"/>
             <arg value="${mets.dir}"/>
         </exec>

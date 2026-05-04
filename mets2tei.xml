@@ -2,6 +2,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:mets="http://www.loc.gov/METS/"
                 xmlns:mods="http://www.loc.gov/mods/v3"
+                xmlns:oai="http://www.openarchives.org/OAI/2.0/"
                 xmlns:xlink="http://www.w3.org/1999/xlink"
                 xmlns:tei="http://www.tei-c.org/ns/1.0"
                 exclude-result-prefixes="#all"
@@ -12,8 +13,26 @@
   <xsl:template match="/">
     <xsl:variable name="modsRoot" select="(//mods:mods)[1]"/>
     <xsl:variable name="metsRoot" select="(//mets:mets)[1]"/>
+    <xsl:variable name="oaiErrorCode" select="normalize-space((/oai:OAI-PMH/oai:error/@code)[1])"/>
+    <xsl:variable name="oaiErrorText" select="normalize-space((/oai:OAI-PMH/oai:error)[1])"/>
     <xsl:variable name="title" select="normalize-space((//mods:titleInfo/mods:title | //mets:metsHdr/@ID | /mets:mets/@OBJID)[1])"/>
     <xsl:variable name="safeTitle" select="if ($title != '') then $title else 'Untitled METS Record'"/>
+
+    <xsl:if test="not($metsRoot)">
+      <xsl:message terminate="yes">
+        <xsl:text>[mets2tei] Input does not contain a METS root element (&lt;mets:mets&gt;).</xsl:text>
+        <xsl:if test="$oaiErrorCode != '' or $oaiErrorText != ''">
+          <xsl:text> OAI-PMH error</xsl:text>
+          <xsl:if test="$oaiErrorCode != ''">
+            <xsl:text> (</xsl:text>
+            <xsl:value-of select="$oaiErrorCode"/>
+            <xsl:text>)</xsl:text>
+          </xsl:if>
+          <xsl:text>: </xsl:text>
+          <xsl:value-of select="$oaiErrorText"/>
+        </xsl:if>
+      </xsl:message>
+    </xsl:if>
 
     <xsl:processing-instruction name="xml-model">href="https://www.tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"</xsl:processing-instruction>
 

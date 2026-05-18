@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="iiif-to-tei" default="all">
     <property name="python.cmd" value="python3"/>
-    <property name="list.file" value="mets.txt"/>
+    <property name="list.file" value="manifests.txt"/>
     <property name="mets.dir" value="mets"/>
     <property name="tei.dir" value="tei"/>
     <property name="stylesheet" value="mets2tei.xml"/>

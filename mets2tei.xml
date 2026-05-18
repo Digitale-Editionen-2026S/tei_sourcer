@@ -17,6 +17,11 @@
     <xsl:variable name="oaiErrorText" select="normalize-space((/oai:OAI-PMH/oai:error)[1])"/>
     <xsl:variable name="title" select="normalize-space((//mods:titleInfo/mods:title | //mets:metsHdr/@ID | /mets:mets/@OBJID)[1])"/>
     <xsl:variable name="safeTitle" select="if ($title != '') then $title else 'Untitled METS Record'"/>
+    <xsl:variable name="sourceUrlPath" select="replace(document-uri(/), '\.xml$', '.url')"/>
+    <xsl:variable name="metsSourceUrl"
+            select="if (unparsed-text-available($sourceUrlPath))
+                then normalize-space(unparsed-text($sourceUrlPath))
+                else ''"/>
 
     <xsl:if test="not($metsRoot)">
       <xsl:message terminate="yes">
@@ -59,6 +64,11 @@
                   <xsl:value-of select="normalize-space(.)"/>
                 </tei:idno>
               </xsl:for-each>
+              <xsl:if test="$metsSourceUrl != ''">
+                <tei:idno type="mets-url">
+                  <xsl:value-of select="$metsSourceUrl"/>
+                </tei:idno>
+              </xsl:if>
               <xsl:for-each select="$modsRoot/mods:originInfo/mods:dateCreated[normalize-space(.) != '']">
                 <tei:date>
                   <xsl:if test="@encoding = 'w3cdtf'">

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Download METS XML files listed in a text file.
 Call like this:
-    python download_manifests.py manifests.txt manifests
+    python download_mets.py manifests.txt manifests
 """
 
 from __future__ import annotations
@@ -51,9 +51,13 @@ def download(url: str, destination: Path) -> None:
     print(f"Saved  {destination.name}")
 
 
+def write_source_url(url: str, destination: Path) -> None:
+    destination.write_text(f"{url}\n", encoding="utf-8")
+
+
 def main() -> int:
     if len(sys.argv) != 3:
-        print("Usage: python download_manifests.py <mets_list.txt> <output_dir>")
+        print("Usage: python download_mets.py <mets_list.txt> <output_dir>")
         return 2
 
     list_file = Path(sys.argv[1])
@@ -69,15 +73,18 @@ def main() -> int:
     for url in iter_urls(list_file):
         mid = mets_id(url)
         target = out_dir / f"{mid}.xml"
+        source_url_file = out_dir / f"{mid}.url"
         if target.exists():
             existing = target.read_bytes()
             if looks_like_xml(existing):
                 print(f"Skip   {target.name}")
+                write_source_url(url, source_url_file)
                 count += 1
                 continue
             print(f"Replace {target.name} (existing file is not XML)")
         print(f"Fetch  {url} -> {target}")
         download(url, target)
+        write_source_url(url, source_url_file)
         count += 1
 
     print(f"Done. Processed {count} URL(s).")

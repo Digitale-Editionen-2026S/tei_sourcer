@@ -99,6 +99,11 @@
           <xsl:variable name="defaultFileId" select="(mets:fptr[starts-with(@FILEID, 'IMG_DEFAULT_')][1]/@FILEID, mets:fptr[1]/@FILEID)[1]"/>
           <xsl:variable name="defaultFile" select="$metsRoot/mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file[@ID = $defaultFileId][1]"/>
           <xsl:variable name="imgUrl" select="string($defaultFile/mets:FLocat/@xlink:href)"/>
+          <xsl:variable name="iiifImageId" select="if (starts-with($defaultFileId, 'IMG_DEFAULT_')) then substring-after($defaultFileId, 'IMG_DEFAULT_') else ''"/>
+          <xsl:variable name="imgUrlHiRes"
+                        select="if ($iiifImageId != '')
+                                then concat('https://www.digital.wienbibliothek.at/i3f/v20/', $iiifImageId, '/full/full/0/default.jpg')
+                                else $imgUrl"/>
           <xsl:variable name="surfId" select="concat('surf-', $defaultFileId)"/>
 
           <xsl:if test="$imgUrl != ''">
@@ -106,7 +111,7 @@
               <desc>
                 <xsl:value-of select="if (@LABEL) then @LABEL else concat('Page ', position())"/>
               </desc>
-              <graphic url="{$imgUrl}"/>
+              <graphic url="{$imgUrlHiRes}"/>
             </surface>
           </xsl:if>
         </xsl:for-each>
